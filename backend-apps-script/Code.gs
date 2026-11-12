@@ -47,6 +47,9 @@ function doPost(e) {
     if (action === "certificate") {
       return jsonResponse(handleCertificate(body));
     }
+    if (action === "seedBaseBQ") {
+      return jsonResponse(handleSeedBaseBQ(body));
+    }
 
     return jsonResponse({ ok: false, error: "Ação inválida" });
   } catch (err) {
@@ -107,6 +110,28 @@ function handleLookup(plant, doc) {
         company: String(regRows[i][6] || ""),
         plant,
         source: "sheets-cadastro",
+      };
+    }
+  }
+
+  // 1b. Verifica na aba "BaseBQ" (cópia sincronizada do BigQuery CMPC)
+  const bqSheet = ensureSheet("BaseBQ", ["docNormalized", "name", "company", "country"]);
+  const lastRow = bqSheet.getLastRow();
+  if (lastRow > 1) {
+    const matchCell = bqSheet
+      .getRange(2, 1, lastRow - 1, 1)
+      .createTextFinder(cleanDoc)
+      .matchEntireCell(true)
+      .findNext();
+    if (matchCell) {
+      const r = matchCell.getRow();
+      const vals = bqSheet.getRange(r, 1, 1, 4).getValues()[0];
+      return {
+        found: true,
+        name: String(vals[1] || ""),
+        company: String(vals[2] || "CMPC Celulose"),
+        plant,
+        source: "sheets-basebq",
       };
     }
   }
@@ -173,6 +198,22 @@ function runBigQuery(sql, params) {
   const queryResults = BigQuery.Jobs.query(request, CONFIG.BQ_PROJECT_ID);
   const rows = queryResults.rows || [];
   return rows.map((r) => (r.f || []).map((cell) => (cell ? cell.v : "")));
+}
+
+function handleSeedBaseBQ(body) {
+  const sheet = ensureSheet("BaseBQ", ["docNormalized", "name", "company", "country"]);
+  if (body.clear) {
+    const last = sheet.getLastRow();
+    if (last > 1) {
+      sheet.getRange(2, 1, last - 1, 4).clearContent();
+    }
+  }
+  const rows = Array.isArray(body.rows) ? body.rows : [];
+  if (rows.length > 0) {
+    const startRow = Math.max(2, sheet.getLastRow() + 1);
+    sheet.getRange(startRow, 1, rows.length, 4).setValues(rows);
+  }
+  return { ok: true, inserted: rows.length };
 }
 
 function handleRegister(body) {
