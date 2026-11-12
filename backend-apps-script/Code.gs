@@ -50,6 +50,16 @@ function doPost(e) {
     if (action === "seedBaseBQ") {
       return jsonResponse(handleSeedBaseBQ(body));
     }
+    if (action === "inspectBaseBQ") {
+      const sheet = ensureSheet("BaseBQ", ["docNormalized", "name", "company", "country"]);
+      const lastRow = sheet.getLastRow();
+      const sample = lastRow > 1 ? sheet.getRange(2, 1, Math.min(5, lastRow - 1), 4).getValues() : [];
+      return jsonResponse({
+        sheetName: sheet.getName(),
+        lastRow: lastRow,
+        sample: sample
+      });
+    }
 
     return jsonResponse({ ok: false, error: "Ação inválida" });
   } catch (err) {
@@ -81,7 +91,13 @@ function ensureSheet(name, headers) {
 }
 
 function normalizeDoc(doc) {
-  return String(doc || "").replace(/[^0-9kK]/g, "").toUpperCase();
+  const digits = String(doc || "").replace(/[^0-9kK]/g, "").toUpperCase();
+  // Se for numérico, remove zeros à esquerda para casar com números no Sheets
+  // ex: '01074575040' vira '1074575040'
+  if (/^\d+$/.test(digits)) {
+    return String(BigInt(digits));
+  }
+  return digits;
 }
 
 function handleLookup(plant, doc) {
@@ -118,21 +134,18 @@ function handleLookup(plant, doc) {
   const bqSheet = ensureSheet("BaseBQ", ["docNormalized", "name", "company", "country"]);
   const lastRow = bqSheet.getLastRow();
   if (lastRow > 1) {
-    const matchCell = bqSheet
-      .getRange(2, 1, lastRow - 1, 1)
-      .createTextFinder(cleanDoc)
-      .matchEntireCell(true)
-      .findNext();
-    if (matchCell) {
-      const r = matchCell.getRow();
-      const vals = bqSheet.getRange(r, 1, 1, 4).getValues()[0];
-      return {
-        found: true,
-        name: String(vals[1] || ""),
-        company: String(vals[2] || "CMPC Celulose"),
-        plant,
-        source: "sheets-basebq",
-      };
+    const dataRange = bqSheet.getRange(2, 1, lastRow - 1, 4).getValues();
+    for (let i = 0; i < dataRange.length; i++) {
+      const rowDoc = normalizeDoc(dataRange[i][0]);
+      if (rowDoc === cleanDoc) {
+        return {
+          found: true,
+          name: String(dataRange[i][1] || ""),
+          company: String(dataRange[i][2] || "CMPC Celulose"),
+          plant,
+          source: "sheets-basebq",
+        };
+      }
     }
   }
 
