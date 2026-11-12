@@ -1,0 +1,5 @@
+# Arquivos locais / temporários que não devem ir para o repositório público
+.clasp.json
+backend-apps-script/.clasp.json
+.DS_Store
+Thumbs.db

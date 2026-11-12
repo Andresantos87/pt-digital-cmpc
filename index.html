@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PT Digital • Treinamento e Certificação CMPC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Google Identity Services (Login Google 100% gratuito) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- jsPDF para emissão do Certificado em PDF direto no navegador -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">CMPC</div>
+        <div class="brand-title">
+          <h1 id="brand-title">Treinamento PT Digital</h1>
+          <p id="brand-subtitle">Permissão de Trabalho Digital • CMPC</p>
+        </div>
+      </div>
+      <div class="topbar-meta" id="topbar-meta"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <nav class="stepper" id="stepper" aria-label="Progresso"></nav>
+    <section id="app-content"></section>
+  </main>
+
+  <footer class="footer">
+    <span>CMPC • PT Digital (Guaíba / Santa Fe)</span>
+    &nbsp;|&nbsp;
+    <a id="btn-open-admin">Gerenciar Módulos</a>
+  </footer>
+
+  <!-- Modal Configurador de Módulos -->
+  <div class="modal-backdrop hidden" id="admin-modal">
+    <div class="modal" id="admin-modal-body"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/validators.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/data-modules.js"></script>
+  <script src="js/data-quiz.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/video-player.js"></script>
+  <script src="js/certificate.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
