@@ -1,12 +1,24 @@
--- Exemplo de View/Query no BigQuery para padronizar as credenciais de Guaíba (CPF) e Santa Fe (RUT)
--- Caso sua tabela já exista, você pode apontar diretamente para ela em backend-apps-script/Code.gs
--- ou criar uma VIEW unificada como esta abaixo:
+-- Consultas de Referência BigQuery (CMPC Mi Fibra / CSOD)
+-- Projeto: cmpc-all-mof-prod
+-- Dataset: 00_personas_corp_datalake_transform
+--
+-- ATENÇÃO: Não usar SELECT * em vw_csod_vwrptuser por causa das Policy Tags de PII
+-- (user_email, user_login, user_phone_mobile, user_id, user_ref).
 
-CREATE OR REPLACE VIEW `SEU-PROJETO-GCP.SEU_DATASET.vw_credenciais_pt_digital` AS
+-- 1. Busca de Empregado Próprio Ativo por CPF (BRA) ou RUT (CHL)
 SELECT
-  UPPER(REGEXP_REPLACE(CAST(documento AS STRING), r'[^0-9kK]', '')) AS cpf_rut,
-  TRIM(nome_completo) AS nome_completo,
-  TRIM(empresa_prestadora) AS empresa,
-  LOWER(TRIM(planta)) AS planta -- 'guaiba' ou 'santafe'
-FROM `SEU-PROJETO-GCP.SEU_DATASET.SUA_TABELA_ORIGEM`
-WHERE documento IS NOT NULL;
+  TRIM(CONCAT(COALESCE(u.user_name_first, ''), ' ', COALESCE(u.user_name_last, ''))) AS nome_completo,
+  u.user_country,
+  u.user_vat_number AS documento_fiscal,
+  u.user_company_no AS empresa_cmpc,
+  u.user_local_system_id AS matricula_rh,
+  TRIM(CONCAT(COALESCE(u.user_mgr_name_first, ''), ' ', COALESCE(u.user_mgr_name_last, ''))) AS lider_imediato
+FROM `cmpc-all-mof-prod.00_personas_corp_datalake_transform.vw_csod_vwrptuser` u
+WHERE u.user_status_id = 1
+  AND u.user_country IN ('BRA', 'CHL')
+  AND UPPER(REGEXP_REPLACE(CAST(u.user_vat_number AS STRING), r'[^0-9kK]', '')) = @documentoLimpo
+LIMIT 1;
+
+-- 2. Tabelas de Terceiros (Rainbow BR / SAT CL)
+-- Brasil (Rainbow): cmpc-all-mof-prod.cmpc_all_data_integration_pt_digital.cmpc_all_pt_digital_rainbow_workers
+-- Chile (SAT):      cmpc-all-mof-prod.cmpc_all_data_integration_pt_digital.cmpc_all_pt_digital_sat_contratista
