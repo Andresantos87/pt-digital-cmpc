@@ -10,7 +10,7 @@
  */
 window.PT_CONFIG = {
   // OAuth 2.0 Client ID (Google Identity Services) - ex: "123456-abc.apps.googleusercontent.com"
-  GOOGLE_CLIENT_ID: "",
+  GOOGLE_CLIENT_ID: "353501247755-lr0qe9245camn3167o76j971eng6noc3.apps.googleusercontent.com",
 
   // URL do Web App do Google Apps Script (faz a consulta no BigQuery e grava progresso no Google Sheets)
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbyqcnFVF5FqUy-IS8sBVJKcQZT-G1h_qiJsv70GjCbXjvu6HfHYmGzzA7uWRlhVI4_I/exec",
